@@ -68,6 +68,10 @@ def print_volumes():
         print("Dimension: ", i, "Rim Volume: ", get_volume_on_rim(15, i))
 
 
+### Now that the above is done, want to show the 4 circle paradox
+
+
+
 # AI Notice:
 # Everything below is AI generated, everything above is handwritten
 
@@ -194,6 +198,53 @@ def create_shell_size_comparison():
     plt.tight_layout()
     plt.show()
 
+def create_absolute_volume_visualization():
+    """Create visualization showing absolute sphere volume vs dimension for different radii"""
+    
+    dimensions = range(1, 51)  # 1 to 50 dimensions to see the peak and decline
+    
+    # Three radii closer together to see peak behaviors without one dominating
+    radii = [1.0, 1.5, 2.0]
+    colors = ['blue', 'red', 'green']
+    
+    plt.figure(figsize=(12, 8))
+    
+    # Plot each radius as a separate line
+    for radius, color in zip(radii, colors):
+        volumes = []
+        peak_dim = 0
+        peak_vol = 0
+        for n in dimensions:
+            vol = get_sphere_volume(radius, n)
+            volumes.append(vol)
+            if vol > peak_vol:
+                peak_vol = vol
+                peak_dim = n
+        
+        # Add peak info to label if it actually peaks within our range
+        if peak_dim > 1 and peak_dim < 50:
+            label = f'Radius = {radius} (peak at dim {peak_dim})'
+        else:
+            label = f'Radius = {radius}'
+            
+        plt.plot(dimensions, volumes, 
+                color=color, linewidth=2.5, marker='o', markersize=3,
+                label=label)
+    
+    plt.xlabel('Dimension', fontsize=14)
+    plt.ylabel('Absolute Volume', fontsize=14)
+    plt.title('N-Dimensional Sphere Volume vs Dimension', fontsize=16, pad=20)
+    plt.legend(fontsize=12)
+    plt.grid(True, alpha=0.3)
+    plt.xlim(1, 50)
+    
+    # Add annotation pointing out the peak behavior
+    plt.text(35, plt.ylim()[1]*0.7, 'All three radii show\npeak-then-decline behavior!', 
+             fontsize=12, bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.7))
+    
+    plt.tight_layout()
+    plt.show()
+
 def print_some_values():
     """Print some key values to verify the calculations"""
     print("\nSample calculations:")
@@ -217,6 +268,9 @@ def main():
     
     # Create a complementary visualization showing different shell sizes
     create_shell_size_comparison()
+    
+    # Create absolute volume visualization
+    create_absolute_volume_visualization()
     
     # Print some values for verification
     print_some_values()
