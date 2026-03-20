@@ -22,13 +22,30 @@ def get_sphere_volume(radius, n):
     # Calcultes volume of sphere in n dimensions
     return C(n) * radius**n
 
-def C(n: int) -> float:
+C_cache = {}
+
+def C_original(n: int) -> float:
     if n == 1:
         return 2
     elif n == 2:
         return pi
     
     return 2*pi/n * C(n-2)
+
+def C(n: int) -> float:
+    if n in C_cache:
+        return C_cache[n]
+
+    if n == 1:
+        C_n = 2
+    elif n == 2:
+        C_n = pi
+    else:
+        C_n = 2*pi/n * C(n-2)
+
+    C_cache[n] = C_n
+    return C_n
+
 
 def get_outer_shell_volume(radius, n, shell_size=0.01):
     # shell_size is a percent of the radius
@@ -50,10 +67,59 @@ def print_volumes():
     for i in range(1, 200):
         print("Dimension: ", i, "Rim Volume: ", get_volume_on_rim(15, i))
 
-print_volumes()
 
 # AI Notice:
 # Everything below is AI generated, everything above is handwritten
+
+def compare_C_performance():
+    """Compare performance between cached and original C function implementations"""
+    import time
+    
+    print("\nPerformance Comparison: C vs C_original")
+    print("=" * 45)
+    
+    test_dimensions = [10, 20, 30, 50, 100]
+    
+    for n in test_dimensions:
+        # Clear cache for fair comparison
+        C_cache.clear()
+        
+        # Time original function
+        start_time = time.time()
+        result_original = C_original(n)
+        original_time = time.time() - start_time
+        
+        # Time cached function (first call builds cache)
+        start_time = time.time()
+        result_cached = C(n)
+        cached_time = time.time() - start_time
+        
+        speedup = original_time / cached_time if cached_time > 0 else float('inf')
+        
+        print(f"Dimension {n:3d}:")
+        print(f"  Original: {original_time:.6f}s")
+        print(f"  Cached:   {cached_time:.6f}s (speedup: {speedup:.1f}x)")
+        print(f"  Results match: {abs(result_original - result_cached) < 1e-10}")
+        print()
+
+def run_performance_demo():
+    """Run the performance comparison"""
+    import time
+    
+    compare_C_performance()
+    print("Cache effectiveness demo: Computing C(50) multiple times...")
+    
+    # Show cache building up
+    C_cache.clear()
+    dimensions_to_compute = [48, 49, 50]
+    
+    for dim in dimensions_to_compute:
+        start = time.time()
+        result = C(dim)
+        elapsed = time.time() - start
+        print(f"C({dim}) = {result:.6f} (took {elapsed:.6f}s, cache size: {len(C_cache)})")
+    
+    print(f"Final cache contents: {list(C_cache.keys())}")
 
 def create_rim_visualization():
     """Create visualization showing rim percentage vs dimension for different radii"""
@@ -139,6 +205,11 @@ def print_some_values():
 
 def main():
     """Main function to run visualizations"""
+    print_volumes()
+    
+    # Show performance comparison
+    run_performance_demo()
+
     print("Creating rim volume visualizations...")
     
     # Create the main visualization you requested
@@ -152,3 +223,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    run_C_tests()
