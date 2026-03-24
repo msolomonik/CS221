@@ -7,6 +7,8 @@ from typing import List, Tuple
 from einops import reduce, rearrange, einsum
 
 from util_adjusted import Vocabulary, read_tweet_data
+from classifier_save_load import save_weights
+
 
 # number of output prediction classes in problem 3 and 4
 K = 6
@@ -218,7 +220,7 @@ def train_linear_classifier(train_features: np.ndarray, train_labels: np.ndarray
 
     num_train_examples, num_features = train_features.shape
 
-    weights = 0.001 * np.random.randn(num_features, K)
+    weights = 0.0006 * np.random.randn(num_features, K)
     bias = np.zeros((1, K))
 
     initial_logits = train_features @ weights + bias
@@ -485,7 +487,7 @@ if __name__ == '__main__':
     print(train_labels)
 
     if args.model == 'linear':
-        lr = 1.3 if not args.lr else args.lr
+        lr = 1.7 if not args.lr else args.lr
         print(f"Training linear classifier with learning rate {lr}...")
         vocab = build_vocabulary(train_texts)
         # print("vocab")
@@ -505,10 +507,12 @@ if __name__ == '__main__':
                                                              train_labels,
                                                              val_features,
                                                              val_labels,
-                                                             num_epochs=100,
+                                                             num_epochs=500,
                                                              lr=lr)
 
         accuracy = predict_linear_classifier(val_features, val_labels, weights, bias)
+        save_weights(weights, bias, vocab, 'emotion_model.pkl')
+
 
         print(f"NumPy classifier test accuracy: {accuracy:.4f}")
 
