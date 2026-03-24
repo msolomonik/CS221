@@ -6,10 +6,10 @@ import torch.nn as nn
 from typing import List, Tuple
 from einops import reduce, rearrange, einsum
 
-from util import Vocabulary, read_tweet_data
+from util_adjusted import Vocabulary, read_tweet_data
 
 # number of output prediction classes in problem 3 and 4
-K = 3
+K = 6
 
 ############################################################
 # Problem 3: NumPy linear classifier
@@ -176,10 +176,13 @@ def predict_linear_classifier(features: np.ndarray, labels: np.ndarray, weights:
     """
     # BEGIN_YOUR_CODE (our solution is 6 lines of code, but don't worry if you deviate from this)
     logits = features @ weights + bias
+    print("logits: ", logits)
+    print("Logit range:", logits.min(), logits.max())
+    print("Logit std:", logits.std())
     predictions = numpy_softmax(logits) # (Batch_size, K)
+    print("predictions", predictions)
     predictions_hard = np.argmax(predictions, axis=1)[:, None]
-    # print("predictions_hard: ", predictions_hard)
-
+    print("predictions_hard: ", predictions_hard[20:30])
     labels_compressed = np.argmax(labels, axis=1)[:, None]
     comparison = predictions_hard == labels_compressed
     return np.sum(comparison) / features.shape[0]
@@ -215,8 +218,12 @@ def train_linear_classifier(train_features: np.ndarray, train_labels: np.ndarray
 
     num_train_examples, num_features = train_features.shape
 
-    weights = np.random.randn(num_features, K)
+    weights = 0.001 * np.random.randn(num_features, K)
     bias = np.zeros((1, K))
+
+    initial_logits = train_features @ weights + bias
+    print("Logit range:", initial_logits.min(), initial_logits.max())
+    print("Logit std:", initial_logits.std())
 
     # BEGIN_YOUR_CODE (our solution is 11 lines of code, but don't worry if you deviate from this)
     for epoch in range(0, num_epochs):
@@ -474,22 +481,31 @@ if __name__ == '__main__':
 
     train_texts, train_labels = read_tweet_data('tweet.train')
     val_texts, val_labels = read_tweet_data('tweet.test')
+    # print(train_texts)
+    print(train_labels)
 
     if args.model == 'linear':
-        lr = 0.2 if not args.lr else args.lr
+        lr = 1.3 if not args.lr else args.lr
         print(f"Training linear classifier with learning rate {lr}...")
         vocab = build_vocabulary(train_texts)
-        predictions = numpy_softmax(np.array([[1, 2, 3], [4, 5, -10], [5, -2, 8]]))
-        one_shots = np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]])
+        # print("vocab")
+        # print(vocab)
+        # predictions = numpy_softmax(np.array([[1, 2, 3], [4, 5, -10], [5, -2, 8]]))
+        # one_shots = np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]])
 
+        # print("train_texts")
+        # print(train_texts)
         train_features = np.array([text_to_features(text, vocab) for text in train_texts])
+
         val_features = np.array([text_to_features(text, vocab) for text in val_texts])
+        print("train_features")
+        print(train_features[20:25])
 
         weights, bias = train_linear_classifier(train_features,
                                                              train_labels,
                                                              val_features,
                                                              val_labels,
-                                                             num_epochs=15,
+                                                             num_epochs=100,
                                                              lr=lr)
 
         accuracy = predict_linear_classifier(val_features, val_labels, weights, bias)

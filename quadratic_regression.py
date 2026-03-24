@@ -8,6 +8,7 @@ import matplotlib
 matplotlib.use('TkAgg')
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 NOISY_QUADRATIC_DATA = np.array(
     [
@@ -57,8 +58,17 @@ def feature_extractor(x):
 def hypothesis(x, weights):
     return np.dot(weights, feature_extractor(x))
 
-# def loss(x, y, weights):
-#     return (hypothesis(x, weights) - y) ** 2
+def loss(weights):
+    return sum((hypothesis(x, weights) - y) ** 2 for x, y in NOISY_QUADRATIC_DATA) / N
+
+def graph_loss(loss_history):
+    sns.set_theme(style='darkgrid')
+    plt.figure(figsize=(8, 5))
+    sns.lineplot(x=range(len(loss_history)), y=loss_history)
+    plt.title('Loss Over Epochs')
+    plt.xlabel('Epoch')
+    plt.ylabel('MSE Loss')
+    plt.show()
 
 def gradient(weights):
     running_sum = 0
@@ -67,13 +77,16 @@ def gradient(weights):
     return running_sum / N
 
 def gradient_descent(weights):
+    loss_history = []
     for _ in range(0, EPOCHS):
+        loss_history.append(loss(weights))
         step = STEP_SIZE * gradient(weights)
         weights -= step
-    return weights
+    return weights, loss_history
 
-final_weights = gradient_descent(np.array([0.0, 0.0, 0.0]))
+final_weights, loss_history = gradient_descent(np.array([0.0, 0.0, 0.0]))
 graph_data(final_weights[2], final_weights[1], final_weights[0])
+graph_loss(loss_history)
 
 # OBSERVATIONS:
 # step size must be much smaller
