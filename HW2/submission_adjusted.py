@@ -489,12 +489,13 @@ def train_mlp_classifier(
     nn.init.xavier_uniform_(embedding_layer.weight)
 
     # BEGIN_YOUR_CODE (our solution is 35 lines of code, but don't worry if you deviate from this)
-    vocab = build_vocabulary(train_texts)
+    # vocab = build_vocabulary(train_texts)
     classifier = MLPClassifier(embedding_dim, hidden_dim, num_classes)
 
     for epoch in range(1, num_epochs+1):
         print("EPOCH: ", epoch)
         classifier.train()
+        embedding_layer.train()
         # Shuffle the training data
         rand_indices = np.arange(len(train_texts))
         np.random.shuffle(rand_indices)
@@ -503,22 +504,27 @@ def train_mlp_classifier(
 
         for start_index in range(0, len(train_texts), batch_size):
             # Get batch
+            # print("start_index", start_index)
             batch_train_texts = train_texts[start_index:start_index+batch_size]
             batch_train_labels = train_labels[start_index:start_index+batch_size]
-
+            # print(batch_train_texts)
+            # print(batch_train_labels)
+            
             # print("batch_text", batch_train_texts)
             # Get embeddings
+            embedding_layer.zero_grad()
+            classifier.zero_grad()
             averaged_features = extract_averaged_features(batch_train_texts, vocab, embedding_layer)
             # print("averaged_features", averaged_features)
 
             # Forward pass and compute loss
-            classifier.zero_grad()
-            embedding_layer.zero_grad()
+            
+
             logits = classifier.forward(averaged_features)
             # print("logits", logits)
             predictions = torch_softmax(logits)
             # print("predictions", predictions)
-            loss = torch_cross_entropy_loss(predictions, torch.tensor(batch_train_labels, dtype=torch.long))
+            loss = torch_cross_entropy_loss(predictions, torch.tensor(batch_train_labels, dtype=torch.float32))
             # print("loss", loss)
             loss.backward()
 
@@ -535,6 +541,7 @@ def train_mlp_classifier(
             update_parameter(embedding_layer.weight, embedding_layer.weight.grad, lr)
 
         classifier.eval()
+        embedding_layer.eval()
         print("ACCURACY: ", predict_mlp(val_texts, torch.tensor(val_labels, dtype=torch.float32), classifier, embedding_layer, vocab))
     return classifier, embedding_layer, vocab
     # END_YOUR_CODE
